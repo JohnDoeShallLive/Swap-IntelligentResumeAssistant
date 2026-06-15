@@ -45,7 +45,7 @@ export default function ChatWindow() {
         content: res.answer, 
         responseDetails: res 
       }]);
-    } catch (e) {
+    } catch {
       setMessages(prev => [...prev, { role: 'agent', content: 'Sorry, there was an error processing your request.' }]);
     } finally {
       setLoading(false);

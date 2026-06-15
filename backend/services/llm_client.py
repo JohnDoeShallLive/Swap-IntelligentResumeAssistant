@@ -54,6 +54,7 @@ class LLMClient:
                 if attempt == max_retries - 1:
                     print("Max retries reached. Returning fallback response.")
                     return AgentResponse(
+                        chain_of_thought="Max retries reached due to validation errors.",
                         answer="Error generating response. Please check API key and rate limits, or try again.",
                         confidence=0.0,
                         source="inference",
