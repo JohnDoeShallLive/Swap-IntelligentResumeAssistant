@@ -3,21 +3,43 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #F8FBFF;
+  --foreground: #27324A;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background Glow Effects */
+.bg-glow-blue {
+  position: fixed;
+  left: -150px;
+  bottom: -100px;
+  width: 500px;
+  height: 500px;
+  background: #45A7FF;
+  filter: blur(180px);
+  z-index: -1;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.bg-glow-pink {
+  position: fixed;
+  right: 25%;
+  top: 25%;
+  width: 400px;
+  height: 400px;
+  background: #FF4FA3;
+  filter: blur(150px);
+  z-index: -1;
+  border-radius: 50%;
+  opacity: 0.4;
 }
 
 @layer utilities {

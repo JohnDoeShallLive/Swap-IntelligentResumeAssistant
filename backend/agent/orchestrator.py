@@ -21,6 +21,7 @@ from backend.tools.keyword_extractor import extract_keywords
 
 # New hardened components
 from backend.agent.injection_detector import is_injection, get_rejection_agent_response
+from backend.agent.assumption_detector import detect_assumption
 from backend.tools.missing_data_engine import check_missing_data
 from backend.tools.resume_data_tool import answer_factual_query
 from backend.agent.response_validator import validate_response
@@ -35,16 +36,22 @@ def process_query(session: SessionState, query: str, jd_text: str = None) -> Age
         _update_history(session, query, response)
         return response
 
-    # Step 2: Missing Data Engine (Fast Fail Layer)
+    # Step 2: Assumption Detection Layer
+    assumption_response = detect_assumption(query)
+    if assumption_response:
+        _update_history(session, query, assumption_response)
+        return assumption_response
+
+    # Step 3: Missing Data Engine (Fast Fail Layer)
     missing_response = check_missing_data(query, session.resume_data)
     if missing_response:
         _update_history(session, query, missing_response)
         return missing_response
 
-    # Step 3: Intent Classification (Rule-based)
+    # Step 4: Intent Classification (Rule-based)
     intent = classify_intent(query)
     
-    # Step 4: Routing
+    # Step 5: Routing
     # Route A: Factual queries (Deterministic Tool, NO LLM)
     if intent.startswith("factual_"):
         response = answer_factual_query(intent, query, session.resume_data)

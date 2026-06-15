@@ -38,18 +38,7 @@ _INJECTION_PATTERNS: List[Pattern[str]] = [
     ),
 
     # --- Category 2: Data fabrication / hallucination coercion ---
-    re.compile(
-        r"\b(?:assume|pretend|imagine|suppose|consider|let'?s?\s+say|act\s+like)\b.*\b"
-        r"(?:candidate|applicant|person|user|they?|he|she|resume)\b.*\b"
-        r"(?:knows?|has|had|have|worked|possesses?|proficient|experienced|skilled)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(?:invent|fabricate|create|make\s+up|generate|produce|add|forge|fake|falsify)\b.*\b"
-        r"(?:certifications?|skills?|experience|qualifications?|achievements?"
-        r"|credentials?|endorsements?|projects?|degrees?|education|work\s+history)\b",
-        re.IGNORECASE,
-    ),
+    # Moved to assumption_detector.py
 
     # --- Category 3: Role hijacking ---
     re.compile(
@@ -61,8 +50,7 @@ _INJECTION_PATTERNS: List[Pattern[str]] = [
     ),
     # Direct "you are a <role>" pattern (without "act as" prefix)
     re.compile(
-        r"\byou\s+are\s+(?:a\s+|an\s+|the\s+).*\b"
-        r"(?:manager|developer|engineer|recruiter|hr|ceo|cto|admin|hacker)\b",
+        r"(?i)\bdo(?:es)?\s+(?:the\s+)?(?:candidate|they|he|she)\s+(?:know|have|use)\b.*\b(?:skill|technolog|language|tool|framework)\b",
         re.IGNORECASE,
     ),
 

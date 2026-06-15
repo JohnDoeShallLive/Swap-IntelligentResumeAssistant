@@ -68,8 +68,9 @@ def get_skills(resume_data: ResumeData, query: str = "") -> AgentResponse:
     
     # Check if raw extraction is requested
     if re.search(r"(?i)\b(?:list|show|extract)\s+all\s+(?:technolog(?:y|ies)|skills?)", query):
-        answer = skills_list
+        answer = json.dumps(resume_data.skills)
     else:
+        skills_list = ", ".join(resume_data.skills)
         answer = f"The candidate lists the following skills: {skills_list}"
         
     return AgentResponse(
@@ -235,19 +236,24 @@ def get_education(resume_data: ResumeData) -> AgentResponse:
     )
 
 
-def get_certifications(resume_data: ResumeData) -> AgentResponse:
-    """Return all certifications from the resume."""
+def get_certifications(resume_data: ResumeData, query: str = "") -> AgentResponse:
+    """Return certifications from the resume."""
     if not resume_data.certifications:
         return AgentResponse(
-            answer="No certifications are mentioned in the resume.",
+            answer="No certifications are listed in the resume.",
             confidence=0.9,
             source="resume",
             missing_data=["certifications"],
         )
 
-    cert_list = "\n".join(f"• {c}" for c in resume_data.certifications)
+    if re.search(r"(?i)\b(?:list|show|extract)\s+all\s+certifications?", query):
+        answer = json.dumps(resume_data.certifications)
+    else:
+        certs = "\n".join([f"• {c}" for c in resume_data.certifications])
+        answer = f"The candidate has the following certifications:\n{certs}"
+
     return AgentResponse(
-        answer=f"The candidate holds the following certifications:\n{cert_list}",
+        answer=answer,
         confidence=1.0,
         source="resume",
         missing_data=[],
@@ -294,7 +300,7 @@ def get_contact_info(resume_data: ResumeData) -> AgentResponse:
     )
 
 
-def get_projects(resume_data: ResumeData) -> AgentResponse:
+def get_projects(resume_data: ResumeData, query: str = "") -> AgentResponse:
     """Return all projects from the resume."""
     if not resume_data.projects:
         return AgentResponse(
@@ -304,19 +310,22 @@ def get_projects(resume_data: ResumeData) -> AgentResponse:
             missing_data=["projects"],
         )
 
-    entries = []
-    for proj in resume_data.projects:
-        name = proj.get("name", "Unnamed Project")
-        tech = proj.get("tech_stack", [])
-        desc = proj.get("description", "")
-        entry = f"• {name}"
-        if tech:
-            entry += f" ({', '.join(tech)})"
-        if desc:
-            entry += f"\n  {desc[:200]}"
-        entries.append(entry)
+    if re.search(r"(?i)\b(?:list|show|extract)\s+all\s+projects?", query):
+        answer = json.dumps(resume_data.projects)
+    else:
+        entries = []
+        for proj in resume_data.projects:
+            name = proj.get("name", "Unnamed Project")
+            tech = proj.get("tech_stack", [])
+            desc = proj.get("description", "")
+            entry = f"• {name}"
+            if tech:
+                entry += f" ({', '.join(tech)})"
+            if desc:
+                entry += f"\n  {desc[:200]}"
+            entries.append(entry)
+        answer = f"Projects ({len(resume_data.projects)} found):\n" + "\n".join(entries)
 
-    answer = f"Projects ({len(resume_data.projects)} found):\n" + "\n".join(entries)
     return AgentResponse(
         answer=answer,
         confidence=1.0,
@@ -355,13 +364,13 @@ def answer_factual_query(intent: str, query: str, resume_data: ResumeData) -> Ag
         return get_education(resume_data)
 
     elif intent == "factual_certifications":
-        return get_certifications(resume_data)
+        return get_certifications(resume_data, query)
 
     elif intent == "factual_contact":
         return get_contact_info(resume_data)
 
     elif intent == "factual_projects":
-        return get_projects(resume_data)
+        return get_projects(resume_data, query)
 
     # Fallback
     return AgentResponse(
@@ -400,4 +409,5 @@ def _extract_skill_from_query(query: str) -> Optional[str]:
 
 
 # Required for _extract_skill_from_query
+import json
 import re

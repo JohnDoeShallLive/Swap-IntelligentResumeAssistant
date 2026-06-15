@@ -9,8 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "#F8FBFF",
+        foreground: "#27324A",
+        primary: "#4F5DFF",
+        secondary: "#7B8BFF",
+        accent: "#FF4FA3",
+        surface: "rgba(255,255,255,0.45)",
+        "text-primary": "#27324A",
+        "text-secondary": "#667085",
+      },
+      boxShadow: {
+        'bubble': '0 10px 40px rgba(0,0,0,0.08)',
       },
     },
   },

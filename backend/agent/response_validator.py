@@ -404,12 +404,17 @@ def validate_response(
         answer, resume_data, confidence, missing_data,
     )
 
-    # ── 4. Missing-data consistency ──────────────────────────────────
+    # ── 4. Experience calculation grounding ──────────────────────────
+    confidence, missing_data = _check_experience_calculations(
+        answer_lower, resume_data, confidence, missing_data,
+    )
+
+    # ── 5. Missing-data consistency ──────────────────────────────────
     confidence, missing_data = _check_missing_data_consistency(
         answer_lower, confidence, missing_data,
     )
 
-    # ── 5. STRICT REJECTION & SOURCE OVERRIDE ────────────────────────
+    # ── 6. STRICT REJECTION & SOURCE OVERRIDE ────────────────────────
     # If any missing data or hallucination is detected, we forcefully
     # reject the response and attribute it to the resume.
     if missing_data:
@@ -534,6 +539,54 @@ def _check_entity_grounding(
             missing_data.append(label)
             confidence -= 0.1
 
+    return confidence, missing_data
+
+
+def _check_experience_calculations(
+    answer_lower: str,
+    resume_data: ResumeData,
+    confidence: float,
+    missing_data: List[str],
+) -> tuple[float, List[str]]:
+    """Flag experience durations (years/months) that the LLM calculated but aren't supported.
+    
+    If the LLM outputs '10 years' or '23 months', verify if those exact strings
+    appear in the raw text or the formatted total duration. If not, reject it.
+    """
+    from backend.tools.resume_parser import calculate_total_experience
+    total_exp = calculate_total_experience(resume_data.experience)
+    valid_duration = total_exp.get("formatted", "").lower()
+    
+    raw_lower = resume_data.raw_text.lower()
+    
+    # Match "\d+ year(s)" or "\d+ month(s)"
+    durations = re.finditer(r"\b(\d+)\s*(year|month)s?\b", answer_lower)
+    for match in durations:
+        full_match = match.group(0)
+        num = match.group(1)
+        unit = match.group(2)
+        
+        # Build variations to check
+        variations = [
+            full_match,
+            f"{num} {unit}",
+            f"{num} {unit}s",
+            f"{num} {unit}(s)",
+            f"{num}+{unit}"
+        ]
+        
+        is_supported = False
+        for var in variations:
+            if var in valid_duration or var in raw_lower:
+                is_supported = True
+                break
+                
+        if not is_supported:
+            label = f"Experience duration '{full_match}' is not supported by the resume data"
+            if label not in missing_data:
+                missing_data.append(label)
+                confidence -= 0.1
+                
     return confidence, missing_data
 
 
