@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r backend/requirements.txt
+      - run: pytest backend/tests/ -v
+
+  deploy-backend:
+    needs: test
+    runs-on: ubuntu-latest
+    if: false # Disable for now unless Railway token is provided
+    steps:
+      - uses: actions/checkout@v4
+      - uses: railwayapp/deploy-action@v1
+        with:
+          service: backend
+          token: ${{ secrets.RAILWAY_TOKEN }}
